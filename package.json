@@ -13,13 +13,17 @@
     "url": "git+https://github.com/Simon-He95/rsox.git"
   },
   "bugs": "https://github.com/Simon-He95/rsox/issues",
-  "keywords": [],
+  "keywords": [
+    "react",
+    "rsox",
+    "react utils"
+  ],
   "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "main": "./dist/index.js",
@@ -55,9 +59,6 @@
   },
   "peerDependencies": {
     "react": "^18.3.1"
-  },
-  "dependencies": {
-    "lazy-js-utils": "^0.0.24"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.18.0",

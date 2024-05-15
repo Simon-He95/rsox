@@ -1,6 +1,6 @@
 ## rsox
 
-> WIP: react status control
+> WIP: react utils
 
 ## Usage
 
