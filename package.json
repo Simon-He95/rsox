@@ -1,5 +1,5 @@
 {
-  "name": "rso",
+  "name": "rsox",
   "type": "module",
   "version": "0.0.1",
   "packageManager": "pnpm@7.33.7",
@@ -7,12 +7,12 @@
   "author": "Simon He",
   "license": "MIT",
   "funding": "https://github.com/sponsors/Simon-He95",
-  "homepage": "https://github.com/Simon-He95/rso#readme",
+  "homepage": "https://github.com/Simon-He95/rsox#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Simon-He95/rso.git"
+    "url": "git+https://github.com/Simon-He95/rsox.git"
   },
-  "bugs": "https://github.com/Simon-He95/rso/issues",
+  "bugs": "https://github.com/Simon-He95/rsox/issues",
   "keywords": [],
   "sideEffects": false,
   "exports": {

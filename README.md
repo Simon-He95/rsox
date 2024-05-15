@@ -1,7 +1,9 @@
-## rso
->WIP: react status control
+## rsox
+
+> WIP: react status control
 
 ## Usage
+
 ```
 import { createStore } from 'rso';
 
