@@ -1,1 +1,4 @@
-export type Return<T> = [() => [number, (value: T) => void, (initial?: T) => void], () => void]
+export type Return<T> = [
+  () => [T, (value: T) => void, (initial?: T) => void],
+  () => void,
+]
