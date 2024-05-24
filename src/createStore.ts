@@ -4,7 +4,8 @@ import type { Return } from './type'
 export function createStore<T>(
   value: T,
   options: {
-    cacheKey?: string
+    localStorageCacheKey?: string
+    sessionStorageCacheKey?: string
     getSnapshot?: (initial: T) => T
     getServerSnapshot?: (initial: T) => T
     dataTransform?: (v: T) => T
@@ -12,7 +13,6 @@ export function createStore<T>(
 ) {
   let initial!: T
   const listeners: (() => void)[] = []
-  const cacheKey = options.cacheKey
   const transformData = () =>
     options.dataTransform ? options.dataTransform(initial) : initial
   const getSnapshot = options.getSnapshot
@@ -21,8 +21,13 @@ export function createStore<T>(
   const getServerSnapshot = options.getServerSnapshot
     ? () => options.getServerSnapshot!(transformData())
     : () => transformData()
-  if (cacheKey) {
-    const cachedValue = localStorage.getItem(cacheKey)
+  if (options.localStorageCacheKey) {
+    const cachedValue = localStorage.getItem(options.localStorageCacheKey)
+    if (cachedValue !== null)
+      initial = JSON.parse(cachedValue)
+  }
+  else if (options.sessionStorageCacheKey) {
+    const cachedValue = sessionStorage.getItem(options.sessionStorageCacheKey)
     if (cachedValue !== null)
       initial = JSON.parse(cachedValue)
   }
@@ -31,8 +36,18 @@ export function createStore<T>(
 
   function update(newValue: T) {
     initial = options.dataTransform ? options.dataTransform(newValue) : newValue
-    if (cacheKey)
-      localStorage.setItem(cacheKey, JSON.stringify(initial))
+    if (options.localStorageCacheKey) {
+      localStorage.setItem(
+        options.localStorageCacheKey,
+        JSON.stringify(initial),
+      )
+    }
+    else if (options.sessionStorageCacheKey) {
+      sessionStorage.setItem(
+        options.sessionStorageCacheKey,
+        JSON.stringify(initial),
+      )
+    }
 
     emitChange()
   }
@@ -49,10 +64,14 @@ export function createStore<T>(
     listeners.length = 0
   }
   function cacheClear(initial?: T) {
-    cacheKey && localStorage.removeItem(cacheKey)
+    if (options.sessionStorageCacheKey)
+      sessionStorage.removeItem(options.sessionStorageCacheKey)
+    else if (options.localStorageCacheKey)
+      localStorage.removeItem(options.localStorageCacheKey)
     if (initial)
       update(initial)
   }
+
   return [
     () => [
       useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot),
