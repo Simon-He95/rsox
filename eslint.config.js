@@ -10,6 +10,7 @@ export default antfu(
   {
     rules: {
       // overrides
+      'no-useless-call': 'off',
     },
   },
 )
