@@ -5,7 +5,7 @@
 ## Usage
 
 ```
-import { createStore } from 'rso';
+import { createStore } from 'rsox';
 
 // store.ts 文件
 const [useCount] = createStore(initial)
@@ -14,7 +14,7 @@ const [count,setCount] = useCount()
 // 我们可以在任意组件或页面去修改数据,同步所有页面视图
 setCount(count+1)
 // 我们也可以持久化数据,通过制定一个 cacheKey
-const [useCount] = createStore(initial,{ cacheKey:'__local_project_countKey' })
+const [useCount] = createStore(initial,{ localStorageCacheKey:'__local_project_countKey' })
 
 ```
 
