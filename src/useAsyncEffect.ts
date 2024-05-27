@@ -2,14 +2,11 @@ import type { DependencyList, EffectCallback } from 'react'
 import { useEffect } from 'react'
 
 export function useAsyncEffect(
-  effect: () => Promise<ReturnType<EffectCallback>>,
+  effect: () => ReturnType<EffectCallback> | void,
   deps: DependencyList = [],
 ) {
   useEffect(() => {
-    let stop: ReturnType<EffectCallback>
-    effect().then((v) => {
-      stop = v
-    })
+    const stop = effect()
     return () => stop && stop()
   }, deps)
 }
