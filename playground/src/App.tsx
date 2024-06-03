@@ -1,6 +1,6 @@
-import React from 'react'
 import A from './components/A'
 import B from './components/B'
+import Scroll from './components/Scroll'
 import { useCount } from './store'
 
 export default function TestComp() {
@@ -13,6 +13,18 @@ export default function TestComp() {
       ---- components: A and B
       <A></A>
       <B></B>
+      <Scroll></Scroll>
+      <div
+        style={{
+          height: '70px',
+          background: '#b6cceb',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        l am footer
+      </div>
     </>
   )
 }
