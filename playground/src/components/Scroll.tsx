@@ -5,18 +5,24 @@ const list: any = []
 for (let i = 0; i < 10; i++) {
   const temp = []
   for (let j = 0; j < 10; j++) {
-    temp.push(i * 10 + j + 1)
+    temp.push({
+      id: i * 10 + j + 1,
+      data: i * 10 + j + 1,
+    })
   }
-  list.push(temp)
+  list.push({
+    items: temp,
+    total: 3000,
+  })
 }
 
 function getData(i: number, setTotal: any, count: any): Promise<any> {
   return new Promise((resolve) => {
     console.log({ count })
     setTimeout(() => {
-      setTotal(30)
-      resolve(list[i])
-    }, 1000)
+      setTotal(list[i].total)
+      resolve(list[i].items)
+    }, 100)
   })
 }
 
@@ -29,7 +35,7 @@ function Home() {
     callback: (page: number, setTotal) => {
       return getData(page, setTotal, count)
     },
-    maxSize: 15,
+    maxSize: 10,
   })
   function clickHandler() {
     // 希望infiniteScroll 暴露一个更新函数可以，重新再执行callback的时候能获取到 count 的最新值
@@ -37,6 +43,7 @@ function Home() {
     count = count + 1
     reset()
   }
+  console.log({ data })
   return (
     <>
       <div
@@ -44,14 +51,14 @@ function Home() {
         style={{
           width: '100%',
           background: '#90dfda',
-          height: '400px',
+          height: '200px',
           overflow: 'scroll',
         }}
       >
         {data?.map((item: any) => {
           return (
-            <div style={{ height: '50px' }} key={item}>
-              {item}
+            <div style={{ height: '50px' }} key={item.id}>
+              {item.data}
             </div>
           )
         })}

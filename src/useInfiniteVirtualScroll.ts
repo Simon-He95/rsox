@@ -24,6 +24,16 @@ export function useInfiniteVirtualScroll() {
       0,
     )
   }
+  const getItemPageMeta = (topItem: any) => {
+    const [current, curPageData] = Array.from(pageCache.entries()).find(
+      ([_, k]) => k.includes(topItem),
+    )!
+    return {
+      curPageData,
+      prePageData: pageCache.get(current - 1),
+      nextPageData: pageCache.get(current + 1),
+    }
+  }
   return function <T>(
     ref: MutableRefObject<any>,
     options: {
@@ -57,26 +67,29 @@ export function useInfiniteVirtualScroll() {
           if (getAllDataSize() >= total)
             updateOver(true)
 
-          const curPageData = pageCache.get(page - 1)!
-          const nextPageData = pageCache.get(page)!
-          const topItem = data?.[data.length - showItem + 1]
+          const topItem = data?.[data.length - showItem + 1] || res[0]
+          const { curPageData, nextPageData } = getItemPageMeta(topItem)
           data = [...(data || ([] as any)), ...res]
           if (maxSize && (data || []).length > maxSize) {
             const findIndex = Math.max(
               curPageData.findIndex(item => item === topItem) - offset,
               0,
             )
-            data = [
-              ...curPageData.slice(findIndex, curPageData.length),
-              ...nextPageData.slice(
-                0,
-                maxSize - (curPageData.length - findIndex),
-              ),
-            ]
+            if (curPageData.length - findIndex > maxSize) {
+              data = [...curPageData.slice(findIndex, findIndex + maxSize)]
+            }
+            else {
+              data = [
+                ...curPageData.slice(findIndex),
+                ...(nextPageData || [])?.slice(
+                  0,
+                  maxSize - (curPageData.length - findIndex),
+                ),
+              ]
+            }
             position
-              = data.findIndex((item: T) => item === topItem) * itemHeight
+              = (data.findIndex((item: T) => item === topItem) || 0) * itemHeight
           }
-
           updateData(data)
         })
         .catch((err) => {
@@ -99,97 +112,76 @@ export function useInfiniteVirtualScroll() {
         const clientHeight = el.clientHeight
         itemHeight = el.children[0].clientHeight
         showItem = Math.floor(clientHeight / itemHeight)
+        if (maxSize && maxSize < showItem + 2) {
+          el.removeEventListener('scroll', listener)
+          throw new Error('maxSize should more than showItem + 2')
+        }
         const scrollTop = el.scrollTop
         if (maxSize && scrollTop === 0 && page >= 1) {
           if (page > 1)
             page--
-          const prePageData = pageCache.get(page - 1)
-          const curPageData = pageCache.get(page)!
-          const nextPageData = pageCache.get(page + 1)!
           const topItem = data[0]
+          const { curPageData, nextPageData, prePageData }
+            = getItemPageMeta(topItem)
 
-          const findIndex
-            = curPageData?.findIndex(item => item === data[0])
-            + showItem
-            + offset
-          if (!prePageData) {
-            // 第一页了
-            if (findIndex > curPageData.length) {
-              if (
-                curPageData.length
-                > maxSize - (findIndex - curPageData.length)
-              ) {
-                data = [
-                  ...curPageData.slice(
-                    curPageData.length
-                    - (maxSize - (findIndex - curPageData.length)),
-                  ),
-                  ...nextPageData.slice(0, findIndex - curPageData.length),
-                ]
-              }
-              else {
-                data = [
-                  ...curPageData,
-                  ...nextPageData.slice(maxSize - curPageData.length),
-                ]
-              }
-            }
-            else {
-              data = [...curPageData, ...pageCache.get(page + 1)!].slice(
-                0,
-                maxSize,
-              )
-            }
-            position
-              = data.findIndex((item: any) => item === topItem) * itemHeight
-          }
-          else {
-            // 前后预留 maxSize / 4 的数据
-            // 获取他当前容器能显示多少条数据
-            if (findIndex > curPageData.length) {
-              const nextPageData = pageCache.get(page + 1)
-              if (!nextPageData) {
-                data = [
-                  ...prePageData.slice(
-                    prePageData.length - (maxSize - findIndex),
-                    prePageData.length,
-                  ),
-                  ...curPageData.slice(0, findIndex),
-                ]
-                updateOver(true)
-              }
-              else {
-                if (findIndex > maxSize) {
-                  data = [
-                    ...curPageData.slice(0, curPageData.length),
-                    ...nextPageData.slice(0, maxSize - curPageData.length),
-                  ]
-                }
-                else {
-                  data = [
-                    ...prePageData.slice(
-                      prePageData.length - (maxSize - findIndex),
-                      prePageData.length,
-                    ),
-                    ...curPageData.slice(0, findIndex),
-                    ...nextPageData.slice(0, findIndex - curPageData.length),
-                  ]
-                }
-                // data = [...prePageData.slice(prePageData.length - (maxSize - findIndex), prePageData.length), ...curPageData.slice(0, findIndex), ...nextPageData.slice(0, findIndex - curPageData.length)]
-              }
+          const findIndex = curPageData.findIndex(item => item === topItem)
+          // 不考虑maxSize < showItem的情况
+          const left = Math.ceil((maxSize - showItem) / 2)
+          let right = maxSize - showItem - left
+          if (left < findIndex) {
+            const distance = maxSize - (curPageData.length - (findIndex - left))
+            if (distance > 0) {
+              data = [
+                ...curPageData.slice(findIndex - left),
+                ...(nextPageData ? nextPageData.slice(0, distance) : []),
+              ]
             }
             else {
               data = [
-                ...prePageData.slice(
-                  prePageData.length - (maxSize - findIndex),
-                  prePageData.length,
+                ...curPageData.slice(
+                  findIndex - left,
+                  findIndex + showItem + right,
                 ),
-                ...curPageData.slice(0, findIndex),
               ]
             }
-            position
-              = data.findIndex((item: any) => item === topItem) * itemHeight
           }
+          else {
+            // left > findIndex, 向 prePageData 借数据
+            if (!prePageData) {
+              right = right + left - findIndex
+              const distance = maxSize - curPageData.length
+              if (distance > 0) {
+                data = [
+                  ...curPageData.slice(0),
+                  ...(nextPageData || [])?.slice(0, distance),
+                ]
+              }
+              else {
+                data = [...curPageData.slice(0, findIndex + showItem + right)]
+              }
+            }
+            else {
+              const distance
+                = maxSize
+                - curPageData.length
+                - (prePageData.length - left + findIndex)
+              if (distance > 0) {
+                data = [
+                  ...prePageData.slice(prePageData.length - left + findIndex),
+                  ...curPageData.slice(0),
+                  ...(nextPageData ? nextPageData.slice(0, distance) : []),
+                ]
+              }
+              else {
+                data = [
+                  ...prePageData.slice(prePageData.length - left + findIndex),
+                  ...curPageData.slice(0, findIndex + showItem + right),
+                ]
+              }
+            }
+          }
+          position
+            = data.findIndex((item: any) => item === topItem) * itemHeight
 
           updateData(data)
           return
@@ -217,93 +209,80 @@ export function useInfiniteVirtualScroll() {
             page++
 
           if (pageCache.has(page)) {
-            const curPageData = pageCache.get(page)!
-            const nextPageData = pageCache.get(page + 1)!
             const topItem = data[data.length - showItem]
-            let findIndex
-              = curPageData.findIndex(item => item === topItem) - offset
-            const prePageData = pageCache.get(page - 1)!
+            const { curPageData, nextPageData, prePageData }
+              = getItemPageMeta(topItem)
+            const findIndex = curPageData.findIndex(item => item === topItem)
 
-            if (maxSize) {
-              if (!nextPageData) {
-                if (maxSize > curPageData.length) {
-                  data = [
-                    ...prePageData.slice(
-                      prePageData.length - (maxSize - curPageData.length),
-                    ),
-                    ...curPageData,
-                  ]
-                }
-                else if (findIndex <= -1) {
-                  if (maxSize - findIndex > curPageData.length) {
-                    data = [
-                      ...prePageData.slice(prePageData.length - findIndex),
-                      ...curPageData,
-                    ]
-                  }
-                  else {
-                    data = [
-                      ...prePageData.slice(prePageData.length - findIndex),
-                      ...curPageData.slice(0, maxSize - findIndex),
-                    ]
-                  }
-                }
-                else {
-                  data = [
-                    ...prePageData.slice(maxSize - findIndex),
-                    ...curPageData.slice(findIndex),
-                  ]
-                }
-                data = [...pageCache.get(page - 1)!, ...curPageData]
-                data = data.slice(data.length - maxSize, data.length)
-                updateOver(true)
+            if (!maxSize)
+              return
+
+            // 不考虑maxSize < showItem的情况
+            const left = Math.floor((maxSize - showItem) / 2)
+            const right = maxSize - showItem - left
+            if (findIndex + showItem + right < curPageData.length) {
+              if (left > findIndex) {
+                data = [
+                  ...prePageData!.slice(
+                    prePageData!.length - (left - findIndex),
+                  ),
+                  ...curPageData.slice(0, findIndex + showItem + right),
+                ]
               }
               else {
-                // 前后预留 maxSize / 4 的数据
-                // 获取他当前容器能显示多少条数据
-                if (findIndex <= -1) {
-                  findIndex
-                    = prePageData.findIndex(item => item === topItem) - offset
-                  if (maxSize > findIndex + curPageData.length) {
-                    data = [
-                      ...prePageData.slice(
-                        prePageData.length - findIndex,
-                        prePageData.length,
-                      ),
-                      ...curPageData,
-                      ...nextPageData.slice(
-                        0,
-                        maxSize - curPageData.length - findIndex,
-                      ),
-                    ]
-                  }
-                  else {
-                    data = [
-                      ...prePageData.slice(
-                        prePageData.length - findIndex,
-                        prePageData.length,
-                      ),
-                      ...curPageData.slice(0, maxSize - findIndex),
-                    ]
-                  }
-                }
-                else {
-                  data = [
-                    ...curPageData.slice(findIndex, curPageData.length),
-                    ...nextPageData.slice(
-                      0,
-                      maxSize - (curPageData.length - findIndex),
-                    ),
-                  ]
-                }
-
-                position
-                  = data.findIndex((item: any) => item === topItem) * itemHeight
+                data = [
+                  ...curPageData.slice(
+                    findIndex - left,
+                    findIndex + showItem + right,
+                  ),
+                ]
               }
             }
             else {
-              data = [...data, ...(nextPageData || [])]
+              // 向 nextPageData 借用
+              if (left > findIndex) {
+                data = [
+                  ...prePageData!.slice(
+                    prePageData!.length - (left - findIndex),
+                  ),
+                  ...curPageData,
+                  ...(nextPageData
+                    ? nextPageData.slice(
+                      0,
+                      maxSize
+                      - curPageData.length
+                      - (prePageData!.length - (left - findIndex)),
+                    )
+                    : []),
+                ]
+              }
+              else {
+                if (nextPageData) {
+                  data = [
+                    ...curPageData.slice(findIndex - left),
+                    ...nextPageData.slice(
+                      0,
+                      maxSize - (curPageData.length - (findIndex - left)),
+                    ),
+                  ]
+                }
+                else {
+                  if (findIndex - left > right) {
+                    data = [...curPageData.slice(findIndex - left - right)]
+                  }
+                  else {
+                    data = [
+                      ...prePageData!.slice(
+                        prePageData!.length - (right - (findIndex - left)),
+                      ),
+                      ...curPageData,
+                    ]
+                  }
+                }
+              }
             }
+            position
+              = data.findIndex((item: any) => item === topItem) * itemHeight
             updateData(data)
             return
           }
