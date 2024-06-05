@@ -102,12 +102,7 @@ export function useInfiniteVirtualScroll() {
       fetch()
       const el = ref.current
       if (!el) {
-        setTimeout(() => {
-          console.log({ el })
-        }, 5000)
-
-        return
-        // throw new Error('ref is not defined')
+        throw new Error('ref is not defined')
       }
 
       const listener = () => {
@@ -301,7 +296,6 @@ export function useInfiniteVirtualScroll() {
         pageCache.clear()
         clear()
         data = null
-        ref.current = null
       }
     }, [])
     useEffect(() => {

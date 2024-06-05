@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useInfiniteVirtualScroll } from '../../../src'
 
 const list: any = []
@@ -32,11 +32,7 @@ let count: any = 0
 const infiniteScroll = useInfiniteVirtualScroll()
 function Home() {
   const itemRef = useRef<any>()
-
   const [_, setCount] = useState(0)
-  useLayoutEffect(() => {
-    console.log({ itemRef })
-  }, [itemRef])
 
   const { data, isOver, reset } = infiniteScroll(itemRef, {
     callback: (page: number, setTotal) => {
@@ -47,7 +43,9 @@ function Home() {
   function clickHandler() {
     // 希望infiniteScroll 暴露一个更新函数可以，重新再执行callback的时候能获取到 count 的最新值
     setCount(count + 1)
+
     count = count + 1
+
     reset()
   }
   console.log({ data })
