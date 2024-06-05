@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 
 /**
- * 串行请求, 保证请求的顺序
+ * 串行请求, 保证请求的顺序, 后一个请求能拿到上一个请求的结果
  * @param promises
  * @returns () => any[]
  */

@@ -102,7 +102,12 @@ export function useInfiniteVirtualScroll() {
       fetch()
       const el = ref.current
       if (!el) {
-        throw new Error('ref is not defined')
+        setTimeout(() => {
+          console.log({ el })
+        }, 5000)
+
+        return
+        // throw new Error('ref is not defined')
       }
 
       const listener = () => {
@@ -300,6 +305,9 @@ export function useInfiniteVirtualScroll() {
       }
     }, [])
     useEffect(() => {
+      if (!ref.current)
+        return
+
       if (isReset) {
         ref.current.scrollTop = 0
         isReset = false

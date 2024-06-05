@@ -1,6 +1,14 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { useCallback, useEffect, useState } from 'react'
 
+/**
+ * 防抖
+ * @param options
+ * @param options.initialValue 初始值
+ * @param options.callback 回调函数
+ * @param options.delay 延迟时间
+ * @returns [T, Dispatch<SetStateAction<T>>]
+ */
 export function useDebounce<T>(options: {
   initialValue: T
   callback: (newV: T) => any

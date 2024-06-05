@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useInfiniteVirtualScroll } from '../../../src'
 
 const list: any = []
@@ -12,15 +12,17 @@ for (let i = 0; i < 10; i++) {
   }
   list.push({
     items: temp,
-    total: 3000,
+    total: 90,
   })
 }
 
 function getData(i: number, setTotal: any, count: any): Promise<any> {
   return new Promise((resolve) => {
     console.log({ count })
+
     setTimeout(() => {
-      setTotal(list[i].total)
+      i === 1 && setTotal(list[i].total)
+      console.log({ i })
       resolve(list[i].items)
     }, 100)
   })
@@ -29,13 +31,18 @@ function getData(i: number, setTotal: any, count: any): Promise<any> {
 let count: any = 0
 const infiniteScroll = useInfiniteVirtualScroll()
 function Home() {
-  const itemRef = useRef<any>(null)
+  const itemRef = useRef<any>()
+
   const [_, setCount] = useState(0)
-  const { isLoading, data, isOver, reset } = infiniteScroll(itemRef, {
+  useLayoutEffect(() => {
+    console.log({ itemRef })
+  }, [itemRef])
+
+  const { data, isOver, reset } = infiniteScroll(itemRef, {
     callback: (page: number, setTotal) => {
       return getData(page, setTotal, count)
     },
-    maxSize: 10,
+    // maxSize: 10,
   })
   function clickHandler() {
     // 希望infiniteScroll 暴露一个更新函数可以，重新再执行callback的时候能获取到 count 的最新值
@@ -62,9 +69,9 @@ function Home() {
             </div>
           )
         })}
-        {isLoading ? 'loading...' : ''}
+        {/* {isLoading ? 'loading...' : ''} */}
 
-        {isOver ? '全部加载完了' : ''}
+        {isOver ? 'no more data' : 'loading more...'}
       </div>
       <button onClick={() => clickHandler()}>
         click 改变请求条件
