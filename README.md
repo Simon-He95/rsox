@@ -6,48 +6,50 @@
 
 - createStore 一个简单的状态管理工具, 用于全局状态管理
 
-```md
-import { createStore } from 'rsox';
+```tsx
+import { createStore } from 'rsox'
 
 // store.ts 文件
 const [useCount] = createStore(initial)
 // 渲染页
-const [count,setCount] = useCount()
+const [count, setCount] = useCount()
 // 我们可以在任意组件或页面去修改数据,同步所有页面视图
-setCount(count+1)
+setCount(count + 1)
 // 我们也可以持久化数据,通过制定一个 cacheKey
-const [useCount] = createStore(initial,{ localStorageCacheKey:'\_\_local_project_countKey' })
+const [useCount] = createStore(initial, {
+  localStorageCacheKey: '__local_project_countKey',
+})
 ```
 
 - conRun 并发请求,不在意请求的顺序, 但结果保持数组顺序
 
-```md
-import { conRun } from 'rsox';
+```tsx
+import { conRun } from 'rsox'
 const getInitData = conRunt([
-() => {
-return new Promise((resolve) => {
-setTimeout(() => {
-resolve('1000')
-}, 5000)
-})
-},
-() => {
-return new Promise((resolve) => {
-setTimeout(() => {
-resolve('5000')
-}, 1000)
-})
-},
-() => {
-return new Promise((resolve) => {
-setTimeout(() => {
-resolve('8000')
-}, 1000)
-})
-}
+  () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('1000')
+      }, 5000)
+    })
+  },
+  () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('5000')
+      }, 1000)
+    })
+  },
+  () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('8000')
+      }, 1000)
+    })
+  },
 ])
-function App(){
-const result = getInitData()
+function App() {
+  const result = getInitData()
 }
 ```
 
